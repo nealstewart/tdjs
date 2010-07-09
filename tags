@@ -1,0 +1,8 @@
+Point	tags	/^Point	td.js	\/^function Point(x, y) {$\/$/
+Square	td.js	/^function Square() {$/
+calcDistance	td.js	/^function calcDistance(object1, object2) {$/
+function	jquery-1.4.2.min.js	/^(function(A,w){function ma(){if(!c.isReady){try{s./
+getCurrentTime	td.js	/^function getCurrentTime() {$/
+if	jquery-1.4.2.min.js	/^a:b+"><\/"+d+">"},F={option:[1,"<select multiple='/
+randPosNegInt	td.js	/^function randPosNegInt(absoluteRange) {$/
+randomInteger	td.js	/^function randomInteger(height) {$/
