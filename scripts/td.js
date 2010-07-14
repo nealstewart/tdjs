@@ -14,7 +14,9 @@ TD.score = 0;
 TD.resources = 0;
 TD.drawables = [];
 TD.movables = [];
+
 TD.towers = [];
+TD.bullets = []
 TD.enemies = [];
 
 TD.initialize = function() {
@@ -30,7 +32,11 @@ TD.initialize = function() {
   });
 
   TD.updateScore();
+  TD.initializeProfilers();
+  TD.initializePaths();
+};
 
+TD.initializePaths = function() {
   TD.open_paths = [];
 
   for (var i = 0; i < TD.canvas.width/TD.GRID_SIZE; i++) {
@@ -39,11 +45,12 @@ TD.initialize = function() {
       TD.open_paths[i].push(true);
     }
   }
-};
+}
 
 TD.start = function() {
   TD.running = true;
-  TD.drawLoop();
+  TD.testLoop();
+  //TD.drawLoop();
 };
 
 TD.spawn = function() {
@@ -76,7 +83,7 @@ TD.moveEntities = function() {
 
     if (obj.location.x > TD.canvas.width ||
         obj.location.x < 0) {
-      TD.removeMoveDrawObject(obj);
+      TD.removeObject(obj);
     }
   });
 }
@@ -93,35 +100,39 @@ TD.collideEntities = function() {
 
 TD.fireTowers = function() {
   _.each(TD.towers, function(tower) {
-      tower.scanAndShoot();
+      var bullets_fired = tower.scanAndShoot(TD.enemies);
+      TD.bullets = TD.bullets.concat(bullets_fired);
+      TD.movables = TD.movables.concat(bullets_fired);
+      TD.drawables = TD.drawables.concat(bullets_fired);
   });
 }
 
 TD.testLoop = function() {
-  var pathfinder = new Square();
-  pathfinder.findPath = function(target, open_places) {
-    closed_places = [];
+  TD.drawBackground();
 
-    // I need to keep track of the open_places some how...
-    // Preferably in a set that's easy to keep track of whether it's empty...
-    // I could populate a linked list with the nodes that are available
-    // And remove them as I need
-    do {
-      
-       
-    } while (reachable_locations.length > 0)
+  var pathfinder = new Pathfinder();
+  pathfinder.location.x = 70;
+  pathfinder.location.y = 70;
+
+  var target = {
+    location: new Point(
+      200, 30
+    )
   };
-}
 
-function LinkedList() {
-  this.first = null;
-  this.last = null;
-}
+  var path = pathfinder.findPath(target, TD.open_paths);
 
-function PathNode(x, y, parent_node) {
-  this.x = x;
-  this.y = y;
-  this.parent_node = parent_node;
+  while (path) {
+    TD.context.strokeStyle = "#FF0000";
+    TD.context.strokeRect(
+      path.location.x * TD.GRID_SIZE,
+      path.location.y * TD.GRID_SIZE,
+      TD.GRID_SIZE,
+      TD.GRID_SIZE
+    );
+
+    path = path.next_node;
+  }
 }
 
 TD.drawLoop = function() {
@@ -146,17 +157,16 @@ TD.fight = function(first_obj, second_obj) {
       second_obj.health--;
 
       if (second_obj.health == 0) {
-        TD.movables = _.without(TD.movables, first_obj, second_obj);
-        TD.drawables = _.without(TD.drawables, first_obj, second_obj);
+        TD.removeObject(first_obj);
+        TD.removeObject(second_obj);
 
         TD.resources += second_obj.value;
         TD.score += second_obj.value * 100;
 
-        TD.updateScore();
+        TD.updateStats();
       }
       else {
-        TD.movables = _.without(TD.movables, first_obj);
-        TD.drawables = _.without(TD.drawables, first_obj);
+        TD.removeObject(first_obj);
       }
     }
   }
@@ -188,9 +198,18 @@ TD.drawTakenSpots = function() {
   }
 }
 
-TD.removeMoveDrawObject = function(object) {
+TD.removeObject = function(object) {
   TD.movables = _.without(TD.movables, object);
   TD.drawables = _.without(TD.drawables, object);
+
+  switch (object.type) {
+  case "enemy" :
+    TD.enemies = _.without(TD.enemies, object);
+    break;
+  case "bullet" :
+    TD.bullets = _.without(TD.bullets, object);
+    break;
+  }
 }
 
 TD.addMoveDrawObject = function(object) {
@@ -203,9 +222,6 @@ TD.initializeProfilers = function() {
   TD.drawProfile = new Profiler("Draw");
   TD.scanProfile = new Profiler("Scan");
 }
-
-
-
 
 TD.spawnTower = function(x, y) {
   var tower = new Tower(x, y);
@@ -236,6 +252,14 @@ TD.spawnTower = function(x, y) {
   TD.towers.push(tower);
 }
 
+TD.updateStats = function() {
+  TD.updateScore();
+  TD.updateResources();
+}
+
 TD.updateScore = function() {
   $("#score").text(TD.score);
+}
+TD.updateResources = function() {
+  $("#resources").text(TD.resources);
 }
