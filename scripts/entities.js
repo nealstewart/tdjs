@@ -100,7 +100,8 @@ function Pathfinder() {
   var pathfinder = new Square();
 
   pathfinder.nodeIsOpen = function(node_to_check, places, closed_places) {
-    if (!places[node_to_check.location.x][node_to_check.location.y]) {
+    if (!places[node_to_check.location.x] || 
+        !places[node_to_check.location.x][node_to_check.location.y]) {
       return false;
     }
 
@@ -131,6 +132,21 @@ function Pathfinder() {
         ),
         "parent": parent_node
       },
+      { // up right
+        location: new Point(
+          parent_node.location.x + 1, 
+          parent_node.location.y - 1
+        ),
+        "parent": parent_node
+      },
+      { // up left
+        location: new Point(
+          parent_node.location.x - 1, 
+          parent_node.location.y - 1
+        ),
+        "parent": parent_node
+      },
+
       { // right
         location: new Point(
           parent_node.location.x + 1, 
@@ -141,6 +157,20 @@ function Pathfinder() {
       { // down
         location: new Point(
           parent_node.location.x, 
+          parent_node.location.y + 1
+        ),
+        "parent": parent_node
+      },
+      { // down right
+        location: new Point(
+          parent_node.location.x + 1, 
+          parent_node.location.y + 1
+        ),
+        "parent": parent_node
+      },
+      { // down left
+        location: new Point(
+          parent_node.location.x - 1, 
           parent_node.location.y + 1
         ),
         "parent": parent_node
@@ -242,10 +272,8 @@ function Pathfinder() {
         current_node = lowest_scoring_neighbour;
         closed_places.push(current_node);
 
-        if (current_node.location.x == target_node.location.x &&
-            current_node.location.y == target_node.location.y) {
-          found_path = true;
-        }
+        found_path = this.pointsAreEqual(current_node, target_node);
+
       }
     } while (current_node != starting_node && !found_path);
 
@@ -258,6 +286,13 @@ function Pathfinder() {
 
     return path;
   };
+
+  pathfinder.pointsAreEqual = function(node, target_node) {
+    return (node.location.x == target_node.location.x
+            &&
+            node.location.y == target_node.location.y);
+  }
+
 
   return pathfinder;
 }

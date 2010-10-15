@@ -109,14 +109,15 @@ TD.fireTowers = function() {
 
 TD.testLoop = function() {
   TD.drawBackground();
+  TD.drawEntities();
 
-  var pathfinder = new Pathfinder();
+  window.pathfinder = new Pathfinder();
   pathfinder.location.x = 70;
   pathfinder.location.y = 70;
 
-  var target = {
+  window.target = {
     location: new Point(
-      200, 30
+      200, 100
     )
   };
 
@@ -133,6 +134,28 @@ TD.testLoop = function() {
 
     path = path.next_node;
   }
+
+  $(TD.canvas).click( function(evt) {
+    var canvas = TD.canvas;
+    TD.spawnTower(evt.pageX - canvas.offsetLeft - 7, evt.pageY - 7 - canvas.offsetTop);
+    var path = pathfinder.findPath(target, TD.open_paths);
+    
+    TD.drawBackground();
+    TD.drawEntities();
+
+    while (path) {
+      TD.context.strokeStyle = "#FF0000";
+      TD.context.strokeRect(
+        path.location.x * TD.GRID_SIZE,
+        path.location.y * TD.GRID_SIZE,
+        TD.GRID_SIZE,
+        TD.GRID_SIZE
+      );
+
+      path = path.next_node;
+    }
+
+  });
 }
 
 TD.drawLoop = function() {
