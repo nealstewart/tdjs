@@ -112,8 +112,6 @@ TD.testLoop = function() {
   TD.drawEntities();
 
   window.pathfinder = new Pathfinder();
-  pathfinder.location.x = 70;
-  pathfinder.location.y = 70;
 
   window.target = {
     location: new Point(
@@ -121,7 +119,13 @@ TD.testLoop = function() {
     )
   };
 
-  var path = pathfinder.findPath(target, TD.open_paths);
+  window.starting_location = {
+    location: new Point(
+      10, 10
+    )
+  };
+
+  var path = pathfinder.findPath(starting_location, target, TD.open_paths, TD.GRID_SIZE);
 
   while (path) {
     TD.context.strokeStyle = "#FF0000";
@@ -138,7 +142,7 @@ TD.testLoop = function() {
   $(TD.canvas).click( function(evt) {
     var canvas = TD.canvas;
     TD.spawnTower(evt.pageX - canvas.offsetLeft - 7, evt.pageY - 7 - canvas.offsetTop);
-    var path = pathfinder.findPath(target, TD.open_paths);
+    var path = pathfinder.findPath(starting_location, target, TD.open_paths, TD.GRID_SIZE);
     
     TD.drawBackground();
     TD.drawEntities();
@@ -154,7 +158,6 @@ TD.testLoop = function() {
 
       path = path.next_node;
     }
-
   });
 }
 
