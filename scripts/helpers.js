@@ -33,6 +33,7 @@ function Profiler(name) {
   };
 
   this.addTime = function(time) {
+    if (!time) time = getCurrentTime();
     this.sample_sum += time;
     this.sample_count++;
   }

@@ -49,8 +49,7 @@ TD.initializePaths = function() {
 
 TD.start = function() {
   TD.running = true;
-  TD.testLoop();
-  //TD.drawLoop();
+  TD.drawLoop();
 };
 
 TD.spawn = function() {
@@ -65,7 +64,7 @@ TD.spawn = function() {
 }
 
 TD.addEnemy = function() {
-  var new_enemy = new Enemy();
+  var new_enemy = new Enemy({location: new Point(300, 300)});
 
   TD.addMoveDrawObject(new_enemy);
   TD.enemies.push(new_enemy);
@@ -78,9 +77,10 @@ TD.drawEntities = function() {
 }
 
 TD.moveEntities = function() {
+  if (!window.move_profiler) window.move_profiler = new Profiler("Moving");
   _.each(TD.movables, function(obj){
     obj.move();
-
+    
     if (obj.location.x > TD.canvas.width ||
         obj.location.x < 0) {
       TD.removeObject(obj);
@@ -163,7 +163,7 @@ TD.testLoop = function() {
 
 TD.drawLoop = function() {
   if (TD.running) {
-    TD.fireTowers();
+    //TD.fireTowers();
     TD.spawn();
 
     TD.moveEntities();

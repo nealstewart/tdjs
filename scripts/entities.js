@@ -81,7 +81,7 @@ function Square() {
   };
 }
 
-function Enemy() {
+function Enemy(target) {
   var enemy = new Square();
   enemy.alive = true;
   enemy.color = "#000";
@@ -89,9 +89,39 @@ function Enemy() {
   enemy.location.y = TD.canvas.height*Math.random();
   enemy.velocity.x = 1;
 
+  enemy.target = target;
+
   enemy.type = "enemy";
   enemy.value = 5;
   enemy.health = 2;
+  enemy.has_found_path = false;
+
+  var pathfinder = new Pathfinder();
+  var next_spot;
+
+  enemy.move = function(reset_path) {
+    console.log(target.location.x)
+    if (!this.has_found_path) {
+      var current_path = pathfinder.findPath(this, this.target, TD.open_paths, TD.GRID_SIZE);
+      next_spot = current_path.next_node;
+      this.has_found_path = true;
+    }
+
+    if (next_spot) {
+      // move toward the next spot as if it were the target...
+      console.log(next_spot.location.x * 5)
+
+      this.velocity.x = (next_spot.location.x * TD.GRID_SIZE - this.location.x)
+      this.velocity.y = (next_spot.location.y * TD.GRID_SIZE - this.location.y)
+
+      this.location.x += this.velocity.x;
+      this.location.y += this.velocity.y;
+
+      if (pathfinder.sameNode(this, next_spot, TD.GRID_SIZE)) {
+        next_spot = next_spot.next_node;
+      }
+    }
+  };
 
   return enemy;
 }
@@ -241,8 +271,6 @@ function Pathfinder() {
       "parent": null
     };
 
-    console.log(starting_node);
-
     var target_node = {
       location: new Point(
         Math.floor(target.location.x/grid_size),
@@ -289,5 +317,23 @@ function Pathfinder() {
     return (node.location.x == target_node.location.x
             &&
             node.location.y == target_node.location.y);
+  }
+
+  this.sameNode = function(entity, target_entity, grid_size) {
+    var entity_node = {
+      location: new Point(
+        Math.floor(entity.location.x/grid_size), 
+        Math.floor(entity.location.y/grid_size)
+      )
+    }
+
+    var target_node = {
+      location: new Point(
+        Math.floor(target_entity.location.x), 
+        Math.floor(target_entity.location.y)
+      )
+    }
+
+    return this.pointsAreEqual(entity_node, target_node);
   }
 }
