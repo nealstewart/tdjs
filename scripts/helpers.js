@@ -2,6 +2,10 @@ function randomInteger(height) {
   return Math.floor(Math.random()*height);
 }
 
+function integerDivide(numerator, denominator) {
+  return Math.floor(numerator/denominator)
+}
+
 function randPosNegInt(absoluteRange) {
   switch (randomInteger(2)) {
     case 0:
