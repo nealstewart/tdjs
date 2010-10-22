@@ -1,7 +1,7 @@
 var TowerDefense = {};
 
 var TD = TowerDefense;
-TD.FRAMERATE = 100;
+TD.FRAMERATE = 30;
 
 TD.GRID_SIZE = 5;
 TD.GAME_HEIGHT = 400;
@@ -163,7 +163,7 @@ TD.testLoop = function() {
 
 TD.drawLoop = function() {
   if (TD.running) {
-    //TD.fireTowers();
+    TD.fireTowers();
     TD.spawn();
 
     TD.moveEntities();

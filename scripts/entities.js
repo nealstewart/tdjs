@@ -1,3 +1,4 @@
+
 function Point(x, y) {
   return {
     x:  x ? x : 0,
@@ -96,11 +97,11 @@ function Enemy(target) {
   enemy.health = 2;
   enemy.has_found_path = false;
 
-  var pathfinder = new Pathfinder();
+  var pathfinder = new Pathfinder(enemy, TD.GRID_SIZE);
   var next_spot;
 
+
   enemy.move = function(reset_path) {
-    console.log(target.location.x)
     if (!this.has_found_path) {
       var current_path = pathfinder.findPath(this, this.target, TD.open_paths, TD.GRID_SIZE);
       next_spot = current_path.next_node;
@@ -108,9 +109,6 @@ function Enemy(target) {
     }
 
     if (next_spot) {
-      // move toward the next spot as if it were the target...
-      console.log(next_spot.location.x * 5)
-
       this.velocity.x = (next_spot.location.x * TD.GRID_SIZE - this.location.x)
       this.velocity.y = (next_spot.location.y * TD.GRID_SIZE - this.location.y)
 
@@ -126,7 +124,11 @@ function Enemy(target) {
   return enemy;
 }
 
-function Pathfinder() {
+
+function Pathfinder(object, grid_size_to_set) {
+  var _object = object;
+  var _grid_size = grid_size_to_set;
+
   this.nodeIsOpen = function(node_to_check, places, closed_places) {
     if (!places[node_to_check.location.x] || 
         !places[node_to_check.location.x][node_to_check.location.y]) {
@@ -228,6 +230,19 @@ function Pathfinder() {
     return current_place;
   }
 
+  var _object_grid_width;
+  function objectGridWidth() {
+    if (!_object_grid_width) _object_grid_width = integerDivide(_object.width, _grid_size);
+
+    return _object_grid_width;
+  }
+
+  var _object_grid_height;
+  function objectGridHeight() {
+    if (!_object_grid_height) _object_grid_height = integerDivide(_object.height, _grid_size);
+
+    return _object_grid_height;
+  }
 
   this.getOpenAdjacentSpots = function(node, places, closed_places) {
     var all_adjacent_spots = this.getAdjacentSpots(node);
@@ -235,10 +250,30 @@ function Pathfinder() {
 
     for (var i in all_adjacent_spots) {
       var current_neighbor = all_adjacent_spots[i];
+      
+      var width = objectGridWidth();
+      var height = objectGridHeight(); 
 
-      if (this.nodeIsOpen(current_neighbor, places, closed_places)) {
-        open_adjacent_spots.push(current_neighbor);
+      var is_open = true;
+
+      for (var x = 0; x < width; x++) {
+        for (var y = 0; y < height; y++) {
+          var node_to_check = {
+            location: new Point(
+              current_neighbor.location.x + x,
+              current_neighbor.location.y + y
+            )
+          };
+
+          is_open = this.nodeIsOpen(node_to_check, places, closed_places);
+
+          if (!is_open) break;
+        }
+
+        if (!is_open) break;
       }
+
+      if (is_open) open_adjacent_spots.push(current_neighbor);
     }
 
     return open_adjacent_spots;
