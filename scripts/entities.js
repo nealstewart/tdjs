@@ -1,4 +1,3 @@
-
 function Point(x, y) {
   return {
     x:  x ? x : 0,
@@ -6,13 +5,13 @@ function Point(x, y) {
   };
 }
 
-function Tower(x, y) {
-  var tower = new Square();
+function Tower(x, y, context) {
+  var tower = new Square(context);
 
   tower.type = "Tower";
 
-  tower.location.x = x;
-  tower.location.y = y;
+  tower.coord.x = x;
+  tower.coord.y = y;
   tower.time_last_shot = new Date().getTime();
 
   tower.last_target = null;
@@ -23,17 +22,17 @@ function Tower(x, y) {
     if ((current_time - this.time_last_shot) > 700) {
       this.time_last_shot = current_time;
 
-      var bullet = new Square();
+      var bullet = new Square(context);
       bullet.width = 3;
       bullet.height = 3;
       bullet.alive = true;
       bullet.type = "bullet";
       bullet.color = "#000";
-      bullet.location.x = this.location.x;
-      bullet.location.y = this.location.y;
+      bullet.coord.x = this.coord.x;
+      bullet.coord.y = this.coord.y;
       
-      bullet.velocity.x = (target.location.x - this.location.x)/5 + target.velocity.x;
-      bullet.velocity.y = (target.location.y - this.location.y)/5 + target.velocity.y;
+      bullet.velocity.x = (target.coord.x - this.coord.x)/5 + target.velocity.x;
+      bullet.velocity.y = (target.coord.y - this.coord.y)/5 + target.velocity.y;
 
       return bullet;
     }
@@ -60,62 +59,63 @@ function Tower(x, y) {
 }
 
 
-function Square() {
+function Square(context) {
+  var context = context;
   this.color = "#CCCCCC";
-  this.location = new Point();
+  this.coord = new Point();
   this.velocity = new Point(1, 0);
   this.width = 10;
   this.height = 10;
   
   this.move = function(current_time) {
-    this.location.x += this.velocity.x;
-    this.location.y += this.velocity.y;
+    this.coord.x += this.velocity.x;
+    this.coord.y += this.velocity.y;
   };
   
   this.draw = function() {
-    var context = TD.context;
     context.strokeStyle = this.color;
     context.strokeRect(
-      this.location.x, this.location.y, 
+      this.coord.x, this.coord.y, 
       this.width, this.height
     );
   };
 }
 
-function Enemy(target) {
-  var enemy = new Square();
+function Enemy(config) {
+  var enemy = new Square(config.context);
+  var open_paths = config.open_paths;
+  var GRID_SIZE = config.GRID_SIZE;
+
   enemy.alive = true;
   enemy.color = "#000";
-  enemy.location.x = 0;
-  enemy.location.y = TD.canvas.height*Math.random();
   enemy.velocity.x = 1;
 
-  enemy.target = target;
+  enemy.coord = config.coord;
+  enemy.target = config.target;
 
   enemy.type = "enemy";
   enemy.value = 5;
   enemy.health = 2;
   enemy.has_found_path = false;
 
-  var pathfinder = new Pathfinder(enemy, TD.GRID_SIZE);
+  var pathfinder = new Pathfinder(enemy, config.GRID_SIZE);
   var next_spot;
 
-
-  enemy.move = function(reset_path) {
+  enemy.move = function() {
     if (!this.has_found_path) {
-      var current_path = pathfinder.findPath(this, this.target, TD.open_paths, TD.GRID_SIZE);
+      var current_path = pathfinder.findPath(this, this.target, open_paths, GRID_SIZE);
       next_spot = current_path.next_node;
       this.has_found_path = true;
     }
 
     if (next_spot) {
-      this.velocity.x = (next_spot.location.x * TD.GRID_SIZE - this.location.x)
-      this.velocity.y = (next_spot.location.y * TD.GRID_SIZE - this.location.y)
+      this.velocity.x = (next_spot.coord.x * GRID_SIZE - this.coord.x)
+      this.velocity.y = (next_spot.coord.y * GRID_SIZE - this.coord.y)
 
-      this.location.x += this.velocity.x;
-      this.location.y += this.velocity.y;
+      this.coord.x += this.velocity.x;
+      this.coord.y += this.velocity.y;
 
-      if (pathfinder.sameNode(this, next_spot, TD.GRID_SIZE)) {
+      if (pathfinder.sameNode(this, next_spot, GRID_SIZE)) {
         next_spot = next_spot.next_node;
       }
     }
@@ -130,15 +130,15 @@ function Pathfinder(object, grid_size_to_set) {
   var _grid_size = grid_size_to_set;
 
   this.nodeIsOpen = function(node_to_check, places, closed_places) {
-    if (!places[node_to_check.location.x] || 
-        !places[node_to_check.location.x][node_to_check.location.y]) {
+    if (!places[node_to_check.coord.x] || 
+        !places[node_to_check.coord.x][node_to_check.coord.y]) {
       return false;
     }
 
     for (var i = 0; i < closed_places.length; i++) {
       var closed_node = closed_places[i];
-      if (closed_node.location.x == node_to_check.location.x &&
-          closed_node.location.y == node_to_check.location.y) {
+      if (closed_node.coord.x == node_to_check.coord.x &&
+          closed_node.coord.y == node_to_check.coord.y) {
         return false;
       }
     }
@@ -156,59 +156,59 @@ function Pathfinder(object, grid_size_to_set) {
   this.getAdjacentSpots = function(parent_node) {
     var directions = [
       { // up
-        location: new Point(
-          parent_node.location.x, 
-          parent_node.location.y - 1
+        coord: new Point(
+          parent_node.coord.x, 
+          parent_node.coord.y - 1
         ),
         "parent": parent_node
       },
       { // up right
-        location: new Point(
-          parent_node.location.x + 1, 
-          parent_node.location.y - 1
+        coord: new Point(
+          parent_node.coord.x + 1, 
+          parent_node.coord.y - 1
         ),
         "parent": parent_node
       },
       { // up left
-        location: new Point(
-          parent_node.location.x - 1, 
-          parent_node.location.y - 1
+        coord: new Point(
+          parent_node.coord.x - 1, 
+          parent_node.coord.y - 1
         ),
         "parent": parent_node
       },
 
       { // right
-        location: new Point(
-          parent_node.location.x + 1, 
-          parent_node.location.y
+        coord: new Point(
+          parent_node.coord.x + 1, 
+          parent_node.coord.y
         ),
         "parent": parent_node
       },
       { // down
-        location: new Point(
-          parent_node.location.x, 
-          parent_node.location.y + 1
+        coord: new Point(
+          parent_node.coord.x, 
+          parent_node.coord.y + 1
         ),
         "parent": parent_node
       },
       { // down right
-        location: new Point(
-          parent_node.location.x + 1, 
-          parent_node.location.y + 1
+        coord: new Point(
+          parent_node.coord.x + 1, 
+          parent_node.coord.y + 1
         ),
         "parent": parent_node
       },
       { // down left
-        location: new Point(
-          parent_node.location.x - 1, 
-          parent_node.location.y + 1
+        coord: new Point(
+          parent_node.coord.x - 1, 
+          parent_node.coord.y + 1
         ),
         "parent": parent_node
       },
       { // left
-        location: new Point(
-          parent_node.location.x - 1, 
-          parent_node.location.y
+        coord: new Point(
+          parent_node.coord.x - 1, 
+          parent_node.coord.y
         ),
         "parent": parent_node
       }
@@ -259,9 +259,9 @@ function Pathfinder(object, grid_size_to_set) {
       for (var x = 0; x < width; x++) {
         for (var y = 0; y < height; y++) {
           var node_to_check = {
-            location: new Point(
-              current_neighbor.location.x + x,
-              current_neighbor.location.y + y
+            coord: new Point(
+              current_neighbor.coord.x + x,
+              current_neighbor.coord.y + y
             )
           };
 
@@ -296,20 +296,20 @@ function Pathfinder(object, grid_size_to_set) {
   }
 
 
-  this.findPath = function(starting_location, target, places, grid_size) {
+  this.findPath = function(starting_coord, target, places, grid_size) {
     var starting_node = {
-      location: new Point(
-        Math.floor(starting_location.location.x/grid_size), 
-        Math.floor(starting_location.location.y/grid_size)
+      coord: new Point(
+        Math.floor(starting_coord.coord.x/grid_size), 
+        Math.floor(starting_coord.coord.y/grid_size)
       ),
       score: 0,
       "parent": null
     };
 
     var target_node = {
-      location: new Point(
-        Math.floor(target.location.x/grid_size),
-        Math.floor(target.location.y/grid_size)
+      coord: new Point(
+        Math.floor(target.coord.x/grid_size),
+        Math.floor(target.coord.y/grid_size)
       )
     }
 
@@ -349,23 +349,23 @@ function Pathfinder(object, grid_size_to_set) {
   };
 
   this.pointsAreEqual = function(node, target_node) {
-    return (node.location.x == target_node.location.x
+    return (node.coord.x == target_node.coord.x
             &&
-            node.location.y == target_node.location.y);
+            node.coord.y == target_node.coord.y);
   }
 
   this.sameNode = function(entity, target_entity, grid_size) {
     var entity_node = {
-      location: new Point(
-        Math.floor(entity.location.x/grid_size), 
-        Math.floor(entity.location.y/grid_size)
+      coord: new Point(
+        Math.floor(entity.coord.x/grid_size), 
+        Math.floor(entity.coord.y/grid_size)
       )
     }
 
     var target_node = {
-      location: new Point(
-        Math.floor(target_entity.location.x), 
-        Math.floor(target_entity.location.y)
+      coord: new Point(
+        Math.floor(target_entity.coord.x), 
+        Math.floor(target_entity.coord.y)
       )
     }
 

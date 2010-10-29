@@ -16,8 +16,8 @@ function randPosNegInt(absoluteRange) {
 }
 
 function calcDistance(object1, object2) {
-  var x_dist = object1.location.x - object2.location.x;
-  var y_dist = object1.location.y - object2.location.y;
+  var x_dist = object1.coord.x - object2.coord.x;
+  var y_dist = object1.coord.y - object2.coord.y;
 
   return Math.sqrt(x_dist * x_dist + y_dist * y_dist);
 }
@@ -48,15 +48,15 @@ function Profiler(name) {
 }
 
 function collidesWith(object1, object2) {
-  first_ls = object1.location.x;
-  first_rs = object1.location.x + object1.width;
-  first_top = object1.location.y;
-  first_bottom = object1.location.y + object1.height;
+  first_ls = object1.coord.x;
+  first_rs = object1.coord.x + object1.width;
+  first_top = object1.coord.y;
+  first_bottom = object1.coord.y + object1.height;
 
-  second_ls = object2.location.x;
-  second_rs = object2.location.x + object2.width;
-  second_top = object2.location.y;
-  second_bottom = object2.location.y + object2.height;
+  second_ls = object2.coord.x;
+  second_rs = object2.coord.x + object2.width;
+  second_top = object2.coord.y;
+  second_bottom = object2.coord.y + object2.height;
 
   var object1_outside_object2 =
     first_rs < second_ls ||

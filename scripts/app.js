@@ -6,7 +6,7 @@ require([
 
 ], function() {
   $(function() {
-    TD.initialize();
+    window.TD = new TowerDefense();
     TD.start();
   });
 });
